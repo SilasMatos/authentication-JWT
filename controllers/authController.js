@@ -1,10 +1,21 @@
+// controllers/userController.js
+const User = require('../models/User')
 const bcrypt = require('bcrypt')
 const jwt = require('jsonwebtoken')
-const User = require('../models/User')
-const checkToken = require('../middleware/checkToken')
 
-// Função para registro de usuário
-exports.register = async (req, res) => {
+async function getUserById(req, res) {
+  const id = req.params.id
+
+  const user = await User.findById(id, '-password')
+
+  if (!user) {
+    return res.status(404).json({ msg: 'Usuário não encontrado!' })
+  }
+
+  res.status(200).json({ user })
+}
+
+async function registerUser(req, res) {
   const { name, email, password, confirmpassword } = req.body
 
   if (!name) {
@@ -26,8 +37,8 @@ exports.register = async (req, res) => {
     return res.status(422).json({ msg: 'Esse email já existe!' })
   }
 
-  const saut = await bcrypt.genSalt(12)
-  const passwordHash = await bcrypt.hash(password, saut)
+  const salt = await bcrypt.genSalt(12)
+  const passwordHash = await bcrypt.hash(password, salt)
 
   const user = new User({
     name,
@@ -43,8 +54,7 @@ exports.register = async (req, res) => {
   }
 }
 
-// Função para autenticação de usuário
-exports.login = async (req, res) => {
+async function loginUser(req, res) {
   const { email, password } = req.body
 
   if (!email) {
@@ -60,10 +70,10 @@ exports.login = async (req, res) => {
     return res.status(404).json({ msg: 'Usuario não encontrado!' })
   }
 
-  const checkpassword = await bcrypt.compare(password, user.password)
+  const checkPassword = await bcrypt.compare(password, user.password)
 
-  if (!checkpassword) {
-    return res.status(422).json({ msg: 'Senha Invalida!' })
+  if (!checkPassword) {
+    return res.status(422).json({ msg: 'Senha Inválida!' })
   }
 
   try {
@@ -83,14 +93,8 @@ exports.login = async (req, res) => {
   }
 }
 
-exports.getUserById = async (req, res) => {
-  const id = req.params.id
-
-  const user = await User.findById(id, '-password')
-
-  if (!user) {
-    return res.status(404).json({ msg: 'Usuário não encontrado!' })
-  }
-
-  res.status(200).json({ user })
+module.exports = {
+  getUserById,
+  registerUser,
+  loginUser
 }

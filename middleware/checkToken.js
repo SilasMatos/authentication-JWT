@@ -1,3 +1,4 @@
+// middleware/checkToken.js
 const jwt = require('jsonwebtoken')
 
 function checkToken(req, res, next) {
@@ -11,7 +12,6 @@ function checkToken(req, res, next) {
   try {
     const secret = process.env.SECRET
     jwt.verify(token, secret)
-
     next()
   } catch (error) {
     res.status(400).json({ msg: 'Token Inválido' })
